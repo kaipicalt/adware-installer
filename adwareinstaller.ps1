@@ -45,7 +45,7 @@ if (-not $pingResult) {
 
 # functions to do anything at all really
 function DownloadConfiguration {
-    $configUrl = "https://raw.githubusercontent.com/kaipicpic/stuff/main/Configuration.xml"
+    $configUrl = "https://raw.githubusercontent.com/kaipicalt/adware-installer/main/Configuration.xml"
     $localConfigPath = "$PSScriptRoot\Configuration.xml"
 
     if (-not (Test-Path $localConfigPath)) {
