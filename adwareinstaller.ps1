@@ -299,7 +299,7 @@ function InstallOffice {
             Write-Host "Installation de Office via Winget."
             & "$env:USERPROFILE\AppData\Local\Microsoft\WindowsApps\winget.exe" install --id "Microsoft.Office" --accept-source-agreements --accept-package-agreements --override "/configure $PSScriptRoot\Configuration.xml"
         } else {
-            Start-Process -FilePath $setupPath -ArgumentList "/configure $PSScriptRoot\Configuration.xml" -Wait
+            Start-Process -FilePath $setupPath -WorkingDirectory $PSScriptRoot -Wait
         }
     }
 }
