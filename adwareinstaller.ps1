@@ -1,13 +1,12 @@
-﻿# Features to add in 1.3 and future versions (most to least important)
-# - Select what action to run individually------DONE in 1.3
-# - Detection that the script has already been ran
-# - Add post-install image / instructions
-# - More interactions
-# - Close Office Window when installed
-# - Check if Office is Installed------DONE in 1.4
+﻿# Version 1.6.0
+
+# Features to add in 1.3 and future versions (most to least important)
 # - Externally downloaded scripts in /scripts folder
 # - Clean downloaded scripts
+# - Detection that the script has already been ran
+# - Add post-install image / instructions and open browsers with ublock origin
 # - Customize autoinstall using a file which can be create trough the menu
+# - Bypass appstoinstall list using an apps.whatever file to install another list of apps
 
 param (
     [switch]$FromIRM
@@ -19,7 +18,7 @@ $osVersion = $osInfo.Version
 $osArchitecture = $osInfo.OSArchitecture
 $NumArchitecture = $osArchitecture -replace "[^\d]", ""
 
-#list of apps to install, put here to be easily modiffiable
+#list of apps to install, put here to be easily modiffiable, app ids can be found on: https://winget.run
 $global:appsToInstall = @('Mozilla.Firefox', 'Google.Chrome', '7zip.7zip', 'AnyDeskSoftwareGmbH.AnyDesk', "Adobe.Acrobat.Reader.${NumArchitecture}-bit")
 
 Clear-Host
@@ -31,13 +30,13 @@ Write-Host "     /\      | |                        |_   _|         | |      | |
 Write-Host "    /  \   __| |_      ____ _ _ __ ___    | |  _ __  ___| |_ __ _| | | ___ _ __ "
 Write-Host "   / /\ \ / _`  \ \ /\ /  / _` | '__/ _ \   | | | '_ \/ __| __/ _`  | | |/ _ \ '__|"
 Write-Host "  / ____ \ (_| |\ V  V / (_| | | |  __/  _| |_| | | \__ \ || (_| | | |  __/ |"
-Write-Host " /_/    \_\__,_| \_/\_/ \__,_|_|  \___| |_____|_| |_|___/\__\__,_|_|_|\___|_|" -NoNewline; Write-Host "	Version 1.4 - The Office update." -ForegroundColor Magenta
+Write-Host " /_/    \_\__,_| \_/\_/ \__,_|_|  \___| |_____|_| |_|___/\__\__,_|_|_|\___|_|" -NoNewline; Write-Host "	Version 1.5 - The Update.. update?" -ForegroundColor Magenta
 Write-Host ""
 
 # simple check to see if the computer has internet, if it doesn'r then script exits
 $pingResult = Test-Connection -ComputerName google.com -Count 1 -Quiet
 if (-not $pingResult) {
-    Write-Host "Aucun accès internet. Assurez-vous que l'ordinateur est bien connecté."
+    Write-Host "Aucun accès internet. Assurez-vous que l'ordinateur soit bien connecté."
     Write-Host "Appuyez sur une touche pour quitter..."
     $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
     exit
@@ -49,16 +48,16 @@ function DownloadConfiguration {
     $localConfigPath = "$PSScriptRoot\Configuration.xml"
 
     if (-not (Test-Path $localConfigPath)) {
-        Write-Host "Configuration.xml introuvable."
+        Write-Host "Le fichier Configuration.xml est introuvable, téléchargement..."
         try {
             $webClient = New-Object System.Net.WebClient
             $webClient.DownloadFile($configUrl, $localConfigPath)
-            Write-Host "Configuration.xml téléchargé avec succès."
+            Write-Host "Le fichier Configuration.xml a été téléchargé avec succès."
         } catch {
             Write-Host "Erreur lors du téléchargement de Configuration.xml. Error: $_"
         }
     } else {
-        Write-Host "Configuration.xml présent."
+        Write-Host "Le fichier Configuration.xml est présent."
     }
 }
 
@@ -70,7 +69,39 @@ function SetOfficeClientEdition {
     $configXml.Configuration.Add.OfficeClientEdition = $architecture
 
     $configXml.Save($localConfigPath)
-    Write-Host "OfficeClientEdition mis à jour à $architecture bits."
+    Write-Host "OfficeClientEdition modifié. ($architecture bits.)"
+}
+
+function Update-AdwareInstaller {
+    $scriptUrl = "https://raw.githubusercontent.com/kaipicalt/adware-installer/main/adwareinstaller.ps1"
+    $localScriptPath = "$PSScriptRoot\adwareinstaller.ps1"
+
+    function Get-ScriptVersion($scriptContent) {
+        $versionLine = $scriptContent | Select-String -Pattern "# Version (\d+\.\d+\.\d+)"
+        if ($null -ne $versionLine) {
+            return $versionLine.Matches.Groups[1].Value.Trim()
+        }
+        return $null
+    }
+
+    if (Test-Path $localScriptPath) {
+        $localScript = Get-Content -Path $localScriptPath -Raw
+        $localVersion = Get-ScriptVersion $localScript
+    } else {
+        $localVersion = "0.0.0"
+    }
+
+    $webClient = New-Object System.Net.WebClient
+    try {
+        $onlineScript = $webClient.DownloadString($scriptUrl)
+        $onlineVersion = Get-ScriptVersion $onlineScript
+        if ([version]$onlineVersion -gt [version]$localVersion) {
+            $webClient.DownloadFile($scriptUrl, $localScriptPath)
+            Write-Host "Le script adwareinstaller.ps1 est obsolète , mise à jour... Nouvelle version: $onlineVersion"
+        }
+    } catch {
+        Write-Host "Erreur lors du téléchargement ou traitement du script. Error: $_"
+    }
 }
 
 function Update-WingetScript {
@@ -103,7 +134,7 @@ function Update-WingetScript {
         # cmopare versions and update if local is older than latest
         if ([version]$onlineVersion -gt [version]$localVersion) {
             $webClient.DownloadFile($githubUrl, $localScriptPath)
-            Write-Host "Le script winget-install est obsolète ou introuvable, mise à jour... Ancienne version: $localVersion, Nouvelle version: $onlineVersion"
+            Write-Host "Le script winget-install est obsolète ou introuvable, mise à jour... Nouvelle version: $onlineVersion"
         } else {
             Write-Host "Le script winget-install est déjà à jour. Version: $localVersion"
         }
@@ -142,7 +173,7 @@ function Update-OhookScript {
 
         if ([version]$onlineVersion -gt [version]$localVersion) {
             $webClient.DownloadFile($cmdUrl, $localCmdPath)
-            Write-Host "Le script MAS (Ohook) est obsolète ou introuvable, mise à jour... Ancienne version: $localVersion, Nouvelle version: $onlineVersion"
+            Write-Host "Le script MAS (Ohook) est obsolète ou introuvable, mise à jour... Nouvelle version: $onlineVersion"
         } else {
             Write-Host "Le script MAS (Ohook) est déjà à jour. Version: $localVersion"
 
@@ -181,7 +212,7 @@ function Update-HWIDScript {
 
         if ([version]$onlineVersion -gt [version]$localVersion) {
             $webClient.DownloadFile($cmdUrl, $localCmdPath)
-            Write-Host "Le script MAS (HWID) est obsolète ou introuvable, mise à jour... Ancienne version: $localVersion, Nouvelle version: $onlineVersion"
+            Write-Host "Le script MAS (HWID) est obsolète ou introuvable, mise à jour... Nouvelle version: $onlineVersion"
         } else {
             Write-Host "Le script MAS (HWID) est déjà à jour. Version: $localVersion"
 
@@ -195,7 +226,6 @@ function CountdownTimer {
     param([int]$seconds)
     Write-Host ""
     Write-Host "Appuyez sur une touche pour acceder au menu."
-    Write-Host ""
     for ($i = $seconds; $i -gt 0; $i--) {
         if ($Host.UI.RawUI.KeyAvailable) {
 
@@ -386,7 +416,7 @@ function RunWin10x64 {
 }
 
 function RunWin11x64 {
-    Write-Host "Windows 11 64-bits détectés, les scripts correspondants vont être exécutés..."
+    Write-Host "Windows 11 64-bits détecté..."
 }
 
 function RunWin10x86 {
@@ -402,37 +432,41 @@ function RunWin7x86 {
 }
 
 #calling needed functions
+if (-not $FromIRM) {
+    Update-AdwareInstaller
+}
 Update-WingetScript
 Update-OhookScript
 Update-HWIDScript
 DownloadConfiguration
+Write-Host "---------------------------------------"
+Write-Host ""
 SetOfficeClientEdition
 if ($FromIRM) {
     Write-Host ""
     Write-Host "Script lancé depuis IRM, Office sera installé via Winget."
 }
-Write-Host ""
-
 
 # check os ver and arch
 if ($osVersion -like "10.0.*" -and $osArchitecture -like "*64*") {
-    Write-Host "Windows 10 64-bits détectés, les scripts correspondants vont être exécutés..."
+    Write-Host "Windows 10 64-bits détecté..."
+    Write-Host "---------------------------------------"
     CountdownTimer -seconds 5
     RunWin10x64
 } elseif ($osVersion -like "10.0.22000.*" -and $osArchitecture -like "*64*") {
-    Write-Host "Windows 11 64-bits détectés, les scripts correspondants vont être exécutés..."
+    Write-Host "Windows 11 64-bits détecté..."
     CountdownTimer -seconds 5
     RunWin11x64
 } elseif ($osVersion -like "10.0.*" -and $osArchitecture -like "*32*") {
-    Write-Host "Windows 10 32-bits détectés, les scripts correspondants vont être exécutés..."
+    Write-Host "Windows 10 32-bits détecté..."
     CountdownTimer -seconds 5
     RunWin10x86
 } elseif ($osVersion -like "6.1.*" -and $osArchitecture -like "*64*") {
-    Write-Host "Windows 7 64-bits détectés, les scripts correspondants vont être exécutés..."
+    Write-Host "Windows 7 64-bits détecté..."
     CountdownTimer -seconds 5
     RunWin7x64
 } elseif ($osVersion -like "6.1.*" -and $osArchitecture -like "*32*") {
-    Write-Host "Windows 7 32-bits détectés, les scripts correspondants vont être exécutés..."
+    Write-Host "Windows 7 32-bits détecté..."
     CountdownTimer -seconds 5
     RunWin7x86
 } else {
