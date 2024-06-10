@@ -1,4 +1,4 @@
-﻿# Version 1.6.0
+﻿# Version 1.5.0
 
 # Features to add in 1.3 and future versions (most to least important)
 # - Externally downloaded scripts in /scripts folder
@@ -95,9 +95,16 @@ function Update-AdwareInstaller {
     try {
         $onlineScript = $webClient.DownloadString($scriptUrl)
         $onlineVersion = Get-ScriptVersion $onlineScript
+
         if ([version]$onlineVersion -gt [version]$localVersion) {
             $webClient.DownloadFile($scriptUrl, $localScriptPath)
-            Write-Host "Le script adwareinstaller.ps1 est obsolète , mise à jour... Nouvelle version: $onlineVersion"
+            Write-Host "Le script adwareinstaller.ps1 est obsolète, mise à jour... Nouvelle version: $onlineVersion"
+            Write-Host "Redémarrage du script..."
+            Start-Sleep -Seconds 2
+            Start-Process -FilePath "$PSScriptRoot\launcher.bat" -WorkingDirectory $PSScriptRoot
+            exit
+        } else {
+            Write-Host "Le script adwareinstaller.ps1 est déjà à jour. Version: $localVersion"
         }
     } catch {
         Write-Host "Erreur lors du téléchargement ou traitement du script. Error: $_"
