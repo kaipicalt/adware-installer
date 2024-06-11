@@ -1,4 +1,4 @@
-﻿# Version 1.5.0
+﻿# Version 1.5.1
 
 # Features to add in 1.3 and future versions (most to least important)
 # - Externally downloaded scripts in /scripts folder
@@ -30,7 +30,7 @@ Write-Host "     /\      | |                        |_   _|         | |      | |
 Write-Host "    /  \   __| |_      ____ _ _ __ ___    | |  _ __  ___| |_ __ _| | | ___ _ __ "
 Write-Host "   / /\ \ / _`  \ \ /\ /  / _` | '__/ _ \   | | | '_ \/ __| __/ _`  | | |/ _ \ '__|"
 Write-Host "  / ____ \ (_| |\ V  V / (_| | | |  __/  _| |_| | | \__ \ || (_| | | |  __/ |"
-Write-Host " /_/    \_\__,_| \_/\_/ \__,_|_|  \___| |_____|_| |_|___/\__\__,_|_|_|\___|_|" -NoNewline; Write-Host "	Version 1.5 - The Update.. update?" -ForegroundColor Magenta
+Write-Host " /_/    \_\__,_| \_/\_/ \__,_|_|  \___| |_____|_| |_|___/\__\__,_|_|_|\___|_|" -NoNewline; Write-Host "	Version 1.5.1 - The Update.. update?" -ForegroundColor Magenta
 Write-Host ""
 
 # simple check to see if the computer has internet, if it doesn'r then script exits
@@ -334,7 +334,7 @@ function InstallOffice {
             Write-Host "Installation de Office via Winget."
             & "$env:USERPROFILE\AppData\Local\Microsoft\WindowsApps\winget.exe" install --id "Microsoft.Office" --accept-source-agreements --accept-package-agreements --override "/configure $PSScriptRoot\Configuration.xml"
         } else {
-            Start-Process -FilePath $setupPath -WorkingDirectory $PSScriptRoot -ArgumentList "/configure $PSScriptRoot\Configuration.xml" -Wait 
+            Start-Process -FilePath $setupPath -WorkingDirectory $PSScriptRoot -Wait 
         }
     }
 }
