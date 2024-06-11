@@ -103,8 +103,6 @@ function Update-AdwareInstaller {
             Start-Sleep -Seconds 2
             Start-Process -FilePath "$PSScriptRoot\launcher.bat" -WorkingDirectory $PSScriptRoot
             exit
-        } else {
-            Write-Host "Le script adwareinstaller.ps1 est déjà à jour. Version: $localVersion"
         }
     } catch {
         Write-Host "Erreur lors du téléchargement ou traitement du script. Error: $_"
@@ -336,7 +334,7 @@ function InstallOffice {
             Write-Host "Installation de Office via Winget."
             & "$env:USERPROFILE\AppData\Local\Microsoft\WindowsApps\winget.exe" install --id "Microsoft.Office" --accept-source-agreements --accept-package-agreements --override "/configure $PSScriptRoot\Configuration.xml"
         } else {
-            Start-Process -FilePath $setupPath -WorkingDirectory $PSScriptRoot -Wait
+            Start-Process -FilePath $setupPath -WorkingDirectory $PSScriptRoot -ArgumentList "/configure $PSScriptRoot\Configuration.xml" -Wait 
         }
     }
 }
@@ -363,6 +361,17 @@ function CheckApps {
         return $result -match $appName
     }
 
+    function IsOfficeInstalled {
+        try {
+            $officeVersion = Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Office\ClickToRun\Configuration' | Select-Object -ExpandProperty VersionToReport
+            if ($officeVersion) {
+                return $true
+            }
+        } catch {
+        }
+        return $false
+    }
+
     $missingApps = @()
 
     foreach ($app in $global:appsToInstall) {
@@ -371,8 +380,7 @@ function CheckApps {
         }
     }
 
-    $officeResult = & $env:USERPROFILE\AppData\Local\Microsoft\WindowsApps\winget.exe list -e --id "Microsoft.Office"
-    if (-not ($officeResult -match "Microsoft.Office")) {
+    if (-not (IsOfficeInstalled)) {
         $missingApps += "Microsoft.Office"
     }
 
