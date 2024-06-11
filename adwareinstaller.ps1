@@ -30,7 +30,7 @@ Write-Host "     /\      | |                        |_   _|         | |      | |
 Write-Host "    /  \   __| |_      ____ _ _ __ ___    | |  _ __  ___| |_ __ _| | | ___ _ __ "
 Write-Host "   / /\ \ / _`  \ \ /\ /  / _` | '__/ _ \   | | | '_ \/ __| __/ _`  | | |/ _ \ '__|"
 Write-Host "  / ____ \ (_| |\ V  V / (_| | | |  __/  _| |_| | | \__ \ || (_| | | |  __/ |"
-Write-Host " /_/    \_\__,_| \_/\_/ \__,_|_|  \___| |_____|_| |_|___/\__\__,_|_|_|\___|_|" -NoNewline; Write-Host "	Version 1.5.1 - The Update.. update?" -ForegroundColor Magenta
+Write-Host " /_/    \_\__,_| \_/\_/ \__,_|_|  \___| |_____|_| |_|___/\__\__,_|_|_|\___|_|" -NoNewline; Write-Host "	Version 1.5.2 - The Update.. update?" -ForegroundColor Magenta
 Write-Host ""
 
 # simple check to see if the computer has internet, if it doesn'r then script exits
