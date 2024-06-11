@@ -1,8 +1,6 @@
-﻿# Version 1.5.1
+﻿# Version 1.5.2
 
 # Features to add in 1.3 and future versions (most to least important)
-# - Externally downloaded scripts in /scripts folder
-# - Clean downloaded scripts
 # - Detection that the script has already been ran
 # - Add post-install image / instructions and open browsers with ublock origin
 # - Customize autoinstall using a file which can be create trough the menu
@@ -11,6 +9,8 @@
 param (
     [switch]$FromIRM
 )
+
+New-Item -Path $PSScriptRoot\things -Force -ItemType Directory > $null
 
 # get and flush os ver and arch to variables
 $osInfo = Get-WmiObject -Class Win32_OperatingSystem
@@ -45,7 +45,7 @@ if (-not $pingResult) {
 # functions to do anything at all really
 function DownloadConfiguration {
     $configUrl = "https://raw.githubusercontent.com/kaipicalt/adware-installer/main/Configuration.xml"
-    $localConfigPath = "$PSScriptRoot\Configuration.xml"
+    $localConfigPath = "$PSScriptRoot\things\Configuration.xml"
 
     if (-not (Test-Path $localConfigPath)) {
         Write-Host "Le fichier Configuration.xml est introuvable, téléchargement..."
@@ -62,7 +62,7 @@ function DownloadConfiguration {
 }
 
 function SetOfficeClientEdition {
-    $localConfigPath = "$PSScriptRoot\Configuration.xml"
+    $localConfigPath = "$PSScriptRoot\things\Configuration.xml"
     [xml]$configXml = Get-Content $localConfigPath
 
     $architecture = if ([System.Environment]::Is64BitOperatingSystem) { "64" } else { "32" }
@@ -112,7 +112,7 @@ function Update-AdwareInstaller {
 function Update-WingetScript {
     $githubUrl = "https://raw.githubusercontent.com/asheroto/winget-install/master/winget-install.ps1"
 
-    $localScriptPath = "$PSScriptRoot\winget-install.ps1" 
+    $localScriptPath = "$PSScriptRoot\things\winget-install.ps1" 
 
     function Get-ScriptVersion($scriptContent) {
         $versionLine = $scriptContent | Select-String -Pattern "\.VERSION (\d+\.\d+\.\d+)"
@@ -154,7 +154,7 @@ function Update-OhookScript {
         # basically the same as Update-WingetScript so not commenting on this one
         $cmdUrl = "https://raw.githubusercontent.com/massgravel/Microsoft-Activation-Scripts/master/MAS/Separate-Files-Version/Activators/Ohook_Activation_AIO.cmd"
 
-        $localCmdPath = "$PSScriptRoot\Ohook_Activation_AIO.cmd"
+        $localCmdPath = "$PSScriptRoot\things\Ohook_Activation_AIO.cmd"
 
         function Get-CmdVersion($scriptContent) {
             $versionLine = $scriptContent | Select-String -Pattern "@set masver=(\d+\.\d+)"
@@ -193,7 +193,7 @@ function Update-HWIDScript {
         # basically the same as Update-WingetScript so not commenting on this one
         $cmdUrl = "https://raw.githubusercontent.com/massgravel/Microsoft-Activation-Scripts/master/MAS/Separate-Files-Version/Activators/HWID_Activation.cmd"
 
-        $localCmdPath = "$PSScriptRoot\HWID_Activation.cmd"
+        $localCmdPath = "$PSScriptRoot\things\HWID_Activation.cmd"
 
         function Get-CmdVersion($scriptContent) {
             $versionLine = $scriptContent | Select-String -Pattern "@set masver=(\d+\.\d+)"
@@ -258,8 +258,8 @@ function ShowMenu {
         Write-Host "6. Vérifier l'installation de Winget"
         Write-Host "7. Vérifier l'installation des applications"
         Write-Host "8. Désactiver l'UAC et les applications en arrière-plan"
-        Write-Host "9. Lancer le script normalement"
-        Write-Host "0. Quitter"
+        Write-Host "9. Effacer les fichiers externes (Winget-Install, Configuration.xml, etc...)"
+        Write-Host "0. Lancer le script normalement"
         Write-Host ""
         $choice = Read-Host "Sélectionnez une option (0-9)"
 
@@ -272,8 +272,8 @@ function ShowMenu {
             6 { CheckWinget }
             7 { CheckApps }
             8 { DisableUACBackgroundApps }
-            9 { return }
-            0 { exit }
+            9 { ClearDownloadedFiles }
+            0 { return }
             default { Write-Host "Option invalide. Veuillez réessayer."; Start-Sleep -Seconds 2 }
 
         }
@@ -283,13 +283,13 @@ function ShowMenu {
 function ActivateWindows {
     Write-Host "Activation de Windows."
     Write-Host ""
-    & "$PSScriptRoot\HWID_Activation.cmd" /HWID
+    & "$PSScriptRoot\things\HWID_Activation.cmd" /HWID
 }
 
 function InstallWinget {
     Write-Host "Installation de Winget."
     Write-Host ""
-    & "$PSScriptRoot\winget-install.ps1" -Force
+    & "$PSScriptRoot\things\winget-install.ps1" -Force
 }
 
 function CheckWinget {
@@ -322,7 +322,7 @@ function InstallApps {
 function InstallOffice {
     if ($FromIRM) {
         Write-Host "Installation de Office via Winget."
-        & "$env:USERPROFILE\AppData\Local\Microsoft\WindowsApps\winget.exe" install --id "Microsoft.Office" --accept-source-agreements --accept-package-agreements --override "/configure $PSScriptRoot\Configuration.xml"
+        & "$env:USERPROFILE\AppData\Local\Microsoft\WindowsApps\winget.exe" install --id "Microsoft.Office" --accept-source-agreements --accept-package-agreements --override "/configure $PSScriptRoot\things\Configuration.xml"
     } else {
         Write-Host "Installation de Office."
         Write-Host ""
@@ -332,7 +332,7 @@ function InstallOffice {
             Write-Host "Le fichier Setup.exe n'existe pas. Veuillez vérifier que le fichier est présent dans le répertoire du script."
             Start-Sleep -Seconds 5
             Write-Host "Installation de Office via Winget."
-            & "$env:USERPROFILE\AppData\Local\Microsoft\WindowsApps\winget.exe" install --id "Microsoft.Office" --accept-source-agreements --accept-package-agreements --override "/configure $PSScriptRoot\Configuration.xml"
+            & "$env:USERPROFILE\AppData\Local\Microsoft\WindowsApps\winget.exe" install --id "Microsoft.Office" --accept-source-agreements --accept-package-agreements --override "/configure $PSScriptRoot\things\Configuration.xml"
         } else {
             Start-Process -FilePath $setupPath -WorkingDirectory $PSScriptRoot -Wait 
         }
@@ -342,7 +342,7 @@ function InstallOffice {
 function ActivateOffice {
     Write-Host "Activation de Office."
     Write-Host ""
-    & "$PSScriptRoot\Ohook_Activation_AIO.cmd" /Ohook
+    & "$PSScriptRoot\things\Ohook_Activation_AIO.cmd" /Ohook
 }
 
 function DisableUACBackgroundApps {
@@ -406,6 +406,23 @@ function CheckApps {
         Write-Host ""
         Write-Host "Appuyez sur une touche pour continuer..."
         $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+    }
+}
+
+function ClearDownloadedFiles {
+    $thingsPath = "$PSScriptRoot\things"
+    
+    if (Test-Path $thingsPath) {
+        try {
+            Remove-Item -Path "$thingsPath\*" -Force -Recurse
+            Write-Host ""
+            Write-Host "Tous les fichiers externes ont été supprimés. Le script va maintenant redémarrer."
+            Start-Sleep -Seconds 2
+            Start-Process -FilePath "$PSScriptRoot\launcher.bat" -WorkingDirectory $PSScriptRoot
+            exit
+        } catch {
+            Write-Host "Erreur lors de la suppression des fichiers. Error: $_"
+        }
     }
 }
 
