@@ -19,7 +19,7 @@ $osArchitecture = $osInfo.OSArchitecture
 $NumArchitecture = $osArchitecture -replace "[^\d]", ""
 
 #list of apps to install, put here to be easily modiffiable, app ids can be found on: https://winget.run
-$global:appsToInstall = @('Mozilla.Firefox', 'Google.Chrome', '7zip.7zip', 'AnyDeskSoftwareGmbH.AnyDesk', "Adobe.Acrobat.Reader.${NumArchitecture}-bit")
+$global:appsToInstall = @('Mozilla.Firefox', 'videolan.vlc', 'Google.Chrome', '7zip.7zip', 'AnyDeskSoftwareGmbH.AnyDesk', "Adobe.Acrobat.Reader.${NumArchitecture}-bit")
 
 Clear-Host
 
