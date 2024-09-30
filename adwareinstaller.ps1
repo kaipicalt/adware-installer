@@ -1,4 +1,4 @@
-﻿# Version 1.5.2
+﻿# Version 1.5.3
 
 # Features to add in 1.3 and future versions (most to least important)
 # - Detection that the script has already been ran
